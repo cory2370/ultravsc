@@ -1,119 +1,186 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+const defaultRegisterForm = {
+  name: '',
+  email: '',
+  password: '',
+  role: 'student',
+};
+
+const defaultLoginForm = {
+  email: '',
+  password: '',
+};
+
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const { login, currentUser } = useAuth();
+  const [loginForm, setLoginForm] = useState(defaultLoginForm);
+  const [registerForm, setRegisterForm] = useState(defaultRegisterForm);
+  const [status, setStatus] = useState({ loading: false, error: null });
+  const { login, register, currentUser, isHydrating } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redirect if already logged in
-    if (currentUser) {
+    if (!isHydrating && currentUser) {
       navigate('/');
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, isHydrating, navigate]);
 
-  const handleLogin = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
-    const email = formData.get('email') || e.target.querySelector('input[type="email"]').value;
-    
-    // For demo purposes, check if user exists in storage
-    // In a real app, this would verify credentials against a backend
-    const storedUser = sessionStorage.getItem('currentUser');
-    let userData;
-    
-    if (storedUser) {
-      // If user exists in storage, use that (preserves role)
-      userData = JSON.parse(storedUser);
-    } else {
-      // Create new user for login (demo - in real app, this would verify credentials)
-      // Note: Role cannot be changed after registration, so we default to student
-      userData = {
-        id: Date.now().toString(),
-        name: email.split('@')[0] || 'User',
-        email: email,
-        role: 'student', // Default role for login (role is set during registration)
-      };
+    setStatus({ loading: true, error: null });
+    try {
+      await login(loginForm);
+      navigate('/');
+    } catch (err) {
+      setStatus({ loading: false, error: err.message || 'Đăng nhập thất bại' });
+      return;
     }
-    
-    login(userData);
-    navigate('/');
+    setStatus({ loading: false, error: null });
   };
 
-  const handleRegister = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
-    const name = formData.get('name') || e.target.querySelector('input[type="text"]').value;
-    const email = formData.get('email') || e.target.querySelectorAll('input[type="email"]')[1]?.value;
-    const role = formData.get('role') || e.target.querySelector('select').value;
+    setStatus({ loading: true, error: null });
+    try {
+      await register(registerForm);
+      navigate('/');
+    } catch (err) {
+      setStatus({ loading: false, error: err.message || 'Đăng ký thất bại' });
+      return;
+    }
+    setStatus({ loading: false, error: null });
+  };
+
+  const updateLoginField = (field, value) => {
+    setLoginForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updateRegisterField = (field, value) => {
+    setRegisterForm((prev) => ({ ...prev, [field]: value }));
+  };
     
-    const userData = {
-      id: Date.now().toString(), // Generate unique ID
-      name: name,
-      email: email,
-      role: role, // Store the selected role
-    };
-    
-    login(userData);
-    navigate('/');
+  const toggleMode = (nextIsLogin) => {
+    setStatus({ loading: false, error: null });
+    setIsLogin(nextIsLogin);
   };
 
   return (
     <div className="auth-section">
       <h1 className="auth-title">UltraVSC</h1>
+      {status.error && (
+        <div style={{ background: '#ffe6e6', color: '#c0392b', padding: '0.75rem 1rem', borderRadius: '6px', marginBottom: '1rem' }}>
+          {status.error}
+        </div>
+      )}
       {isLogin ? (
         <div id="loginForm">
-          <form onSubmit={handleLogin}>
+          <form onSubmit={handleLoginSubmit}>
             <div className="form-group">
               <label className="form-label">Email</label>
-              <input type="email" name="email" className="form-input" required />
+              <input
+                type="email"
+                name="email"
+                className="form-input"
+                value={loginForm.email}
+                onChange={(e) => updateLoginField('email', e.target.value)}
+                required
+              />
             </div>
             <div className="form-group">
               <label className="form-label">Mật khẩu</label>
-              <input type="password" name="password" className="form-input" required />
+              <input
+                type="password"
+                name="password"
+                className="form-input"
+                value={loginForm.password}
+                onChange={(e) => updateLoginField('password', e.target.value)}
+                required
+              />
             </div>
-            <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
-              Đăng nhập
+            <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={status.loading}>
+              {status.loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </button>
           </form>
           <div className="auth-toggle">
             Chưa có tài khoản?{' '}
-            <a href="#" onClick={(e) => { e.preventDefault(); setIsLogin(false); }}>
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                toggleMode(false);
+              }}
+            >
               Đăng ký
             </a>
           </div>
         </div>
       ) : (
         <div id="registerForm">
-          <form onSubmit={handleRegister}>
+          <form onSubmit={handleRegisterSubmit}>
             <div className="form-group">
               <label className="form-label">Họ và tên</label>
-              <input type="text" name="name" className="form-input" required />
+              <input
+                type="text"
+                name="name"
+                className="form-input"
+                value={registerForm.name}
+                onChange={(e) => updateRegisterField('name', e.target.value)}
+                required
+              />
             </div>
             <div className="form-group">
               <label className="form-label">Email</label>
-              <input type="email" name="email" className="form-input" required />
+              <input
+                type="email"
+                name="email"
+                className="form-input"
+                value={registerForm.email}
+                onChange={(e) => updateRegisterField('email', e.target.value)}
+                required
+              />
             </div>
             <div className="form-group">
               <label className="form-label">Mật khẩu</label>
-              <input type="password" name="password" className="form-input" required />
+              <input
+                type="password"
+                name="password"
+                className="form-input"
+                value={registerForm.password}
+                onChange={(e) => updateRegisterField('password', e.target.value)}
+                required
+              />
             </div>
             <div className="form-group">
               <label className="form-label">Vai trò</label>
-              <select name="role" className="form-select" required>
+              <select
+                name="role"
+                className="form-select"
+                value={registerForm.role}
+                onChange={(e) => updateRegisterField('role', e.target.value)}
+                required
+              >
                 <option value="student">Học sinh</option>
                 <option value="teacher">Giáo viên</option>
+                <option value="moderator">Moderator</option>
+                <option value="maintainer">Site Maintainer</option>
               </select>
             </div>
-            <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
-              Đăng ký
+            <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={status.loading}>
+              {status.loading ? 'Đang đăng ký...' : 'Đăng ký'}
             </button>
           </form>
           <div className="auth-toggle">
             Đã có tài khoản?{' '}
-            <a href="#" onClick={(e) => { e.preventDefault(); setIsLogin(true); }}>
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                toggleMode(true);
+              }}
+            >
               Đăng nhập
             </a>
           </div>

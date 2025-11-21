@@ -1,5 +1,5 @@
 import React from 'react';
-import { categoryLabels } from '../data/posts';
+import { categoryLabels } from '../data/threads';
 
 const CategoryFilter = ({ currentFilter, onFilterChange }) => {
   const categories = ['all', 'announcement', 'qa', 'resources', 'entertainment'];

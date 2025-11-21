@@ -1,9 +1,10 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { getRoleConfig } from '../utils/roles';
 
 const Header = () => {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, getRoleLabel } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -43,12 +44,12 @@ const Header = () => {
                 className="social-btn twitter"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Twitter"
+                aria-label="Zalo"
               >
-                <img src="https://cdn.simpleicons.org/x/FFFFFF" alt="Twitter" />
+                <img src="https://cdn.simpleicons.org/zalo/FFFFFF" alt="Zalo" />
               </a>
               <a
-                href="https://github.com"
+                href="https://github.com/cory2370/ultravsc"
                 className="social-btn github"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -64,7 +65,7 @@ const Header = () => {
             <span id="userName">{currentUser?.name || 'User'}</span>
             {currentUser && (
               <span style={{ fontSize: '0.75rem', opacity: 0.9 }}>
-                {currentUser.role === 'teacher' ? '👨‍🏫 Giáo viên' : '👨‍🎓 Học sinh'}
+                {getRoleConfig(currentUser.role).icon} {getRoleLabel()}
               </span>
             )}
           </div>
