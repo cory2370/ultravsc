@@ -46,5 +46,5 @@ jobs:
         uses: crazy-max/ghaction-github-pages@v4.2.0
         with:
           build_dir: './dist'
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
           
