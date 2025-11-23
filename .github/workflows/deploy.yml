@@ -43,7 +43,7 @@ jobs:
       
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: crazy-max/ghaction-github-pages@v4.2.0
+        uses: actions/deploy-pages@v1
         with:
           build_dir: './dist'
           token: ${{ github.token }}
